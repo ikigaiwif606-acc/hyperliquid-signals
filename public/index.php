@@ -155,9 +155,9 @@ if (!in_array($window, ['day', 'week', 'month'], true)) $window = 'day';
     const body = rows.map((r, i) => {
       const pnl = Number(r.pnl || 0);
       const cls = pnl >= 0 ? 'up' : 'down';
-      return `<tr class="border-t border-zinc-900">
+      return `<tr class="border-t border-zinc-900 cursor-pointer" onclick="location.href='/trader.php?addr=${r.address}'">
         <td class="px-4 py-3 text-zinc-600">${i+1}</td>
-        <td class="px-4 py-3 text-zinc-200">${shortAddr(r.address)}${r.label ? ` <span class="text-[10px] text-zinc-500 ml-1">${r.label}</span>` : ''}</td>
+        <td class="px-4 py-3"><a href="/trader.php?addr=${r.address}" class="text-zinc-200 hover:text-emerald-400">${shortAddr(r.address)}</a>${r.label ? ` <span class="text-[10px] text-zinc-500 ml-1">${r.label}</span>` : ''}</td>
         <td class="px-4 py-3 text-right ${cls}">${money(pnl)}</td>
         <td class="px-4 py-3 text-right text-zinc-400">${money(Number(r.volume||0))}</td>
         <td class="px-4 py-3 text-right text-zinc-400">${money(Number(r.account_value||0))}</td>
@@ -172,7 +172,7 @@ if (!in_array($window, ['day', 'week', 'month'], true)) $window = 'day';
       const sideCls = r.side === 'long'
         ? 'bg-emerald-500/15 text-emerald-400'
         : 'bg-red-500/15 text-red-400';
-      return `<div class="p-4 flex items-center gap-4 hover:bg-white/[.02]">
+      return `<div class="p-4 flex items-center gap-4 hover:bg-white/[.02] cursor-pointer" onclick="location.href='/trader.php?addr=${r.address}'">
         <div class="mono text-zinc-600 text-xs w-5">${i+1}</div>
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-2">
@@ -181,7 +181,7 @@ if (!in_array($window, ['day', 'week', 'month'], true)) $window = 'day';
             <span class="mono text-[10px] text-zinc-500">${Number(r.leverage).toFixed(1)}×</span>
           </div>
           <div class="mono text-xs text-zinc-500 mt-0.5">
-            ${shortAddr(r.address)} · ${age(r.updated_at)} ago · entry $${Number(r.entry_px).toLocaleString()} → $${Number(r.mark_px).toLocaleString()}
+            <a href="/trader.php?addr=${r.address}" class="hover:text-emerald-400" onclick="event.stopPropagation()">${shortAddr(r.address)}</a> · ${age(r.updated_at)} ago · entry $${Number(r.entry_px).toLocaleString()} → $${Number(r.mark_px).toLocaleString()}
           </div>
         </div>
         <div class="text-right">
