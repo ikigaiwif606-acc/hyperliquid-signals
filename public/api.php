@@ -85,6 +85,88 @@ switch ($q) {
         ]);
         break;
 
+    case 'hero':
+        $traders = (int)db()->query('SELECT COUNT(*) FROM traders')->fetchColumn();
+        $sig = db()->query("SELECT direction, COUNT(*) AS n FROM signals WHERE status='active' GROUP BY direction")->fetchAll();
+        $sLong = $sShort = 0;
+        foreach ($sig as $r) {
+            if ($r['direction'] === 'long') $sLong = (int)$r['n'];
+            else $sShort = (int)$r['n'];
+        }
+
+        $top10_pnl = (float)db()->query("
+            SELECT COALESCE(SUM(unrealized_pnl), 0) FROM positions
+            WHERE unrealized_pnl > 0
+              AND unrealized_pnl IN (
+                SELECT unrealized_pnl FROM positions
+                WHERE unrealized_pnl > 0 ORDER BY unrealized_pnl DESC LIMIT 10
+              )
+        ")->fetchColumn();
+
+        $top20 = db()->query("
+            SELECT t.address
+            FROM portfolios p
+            JOIN traders t USING (address)
+            WHERE COALESCE(t.role, 'user') = 'user'
+              AND p.vlm_month >= 500000
+              AND p.account_value >= 10000
+              AND p.pnl_month > 0
+            ORDER BY (p.pnl_month * (1.0 + 3.0 * (p.pnl_month / NULLIF(p.vlm_month, 0)))
+                      * CASE WHEN p.pnl_week > 0 THEN 1.2 ELSE 0.8 END) DESC
+            LIMIT 20
+        ")->fetchAll(PDO::FETCH_COLUMN);
+
+        $wLong = $wShort = 0;
+        if ($top20) {
+            $ph = implode(',', array_fill(0, count($top20), '?'));
+            $stmt = db()->prepare("SELECT side, COUNT(*) FROM positions WHERE address IN ($ph) GROUP BY side");
+            $stmt->execute($top20);
+            foreach ($stmt->fetchAll(PDO::FETCH_NUM) as [$side, $n]) {
+                if ($side === 'long') $wLong = (int)$n;
+                else $wShort = (int)$n;
+            }
+        }
+
+        echo json_encode([
+            'traders' => $traders,
+            'signals_long' => $sLong,
+            'signals_short' => $sShort,
+            'top10_pnl_sum' => $top10_pnl,
+            'whale_long_positions' => $wLong,
+            'whale_short_positions' => $wShort,
+        ]);
+        break;
+
+    case 'consensus':
+        $top20 = db()->query("
+            SELECT t.address
+            FROM portfolios p
+            JOIN traders t USING (address)
+            WHERE COALESCE(t.role, 'user') = 'user'
+              AND p.vlm_month >= 500000
+              AND p.account_value >= 10000
+              AND p.pnl_month > 0
+            ORDER BY (p.pnl_month * (1.0 + 3.0 * (p.pnl_month / NULLIF(p.vlm_month, 0)))
+                      * CASE WHEN p.pnl_week > 0 THEN 1.2 ELSE 0.8 END) DESC
+            LIMIT 20
+        ")->fetchAll(PDO::FETCH_COLUMN);
+        if (!$top20) { echo '[]'; break; }
+        $ph = implode(',', array_fill(0, count($top20), '?'));
+        $stmt = db()->prepare("
+            SELECT coin,
+                   SUM(CASE WHEN side='long' THEN 1 ELSE 0 END) AS longs,
+                   SUM(CASE WHEN side='short' THEN 1 ELSE 0 END) AS shorts
+            FROM positions
+            WHERE address IN ($ph)
+            GROUP BY coin
+            HAVING (longs + shorts) >= 3
+            ORDER BY (longs + shorts) DESC, ABS(longs - shorts) DESC
+            LIMIT 12
+        ");
+        $stmt->execute($top20);
+        echo json_encode($stmt->fetchAll());
+        break;
+
     case 'signals':
         $sql = "
             SELECT id, created_at, coin, direction, consensus_count, top_n,
