@@ -1,10 +1,14 @@
 #!/usr/bin/env bash
 # One-shot VPS bootstrap. Run as root on a fresh Ubuntu 24.04 LTS box.
-# Usage: curl -sSL .../setup.sh | bash  (or copy-paste)
+# Usage:  cd /var/www/hyperliquid-signals && bash deploy/setup.sh
 set -euo pipefail
 
 APP_DIR=/var/www/hyperliquid-signals
-REPO=${REPO:-https://github.com/ikigaiwif606-acc/hyperliquid-signals.git}
+
+if [ "$(pwd)" != "$APP_DIR" ]; then
+    echo "run this from inside $APP_DIR (clone the repo there first)"
+    exit 1
+fi
 
 echo "==> apt install"
 apt-get update
@@ -26,16 +30,11 @@ ufw allow 80/tcp
 ufw allow 443/tcp
 ufw --force enable
 
-echo "==> clone repo"
-if [ ! -d "$APP_DIR/.git" ]; then
-    git clone "$REPO" "$APP_DIR"
-else
-    git -C "$APP_DIR" pull
-fi
-mkdir -p "$APP_DIR/data"
+echo "==> permissions"
+mkdir -p "$APP_DIR/data" /var/log/caddy
 chown -R www-data:www-data "$APP_DIR/data"
 
-echo "==> init db"
+echo "==> seed db"
 sudo -u www-data php "$APP_DIR/cron/seed_traders.php" || true
 sudo -u www-data php "$APP_DIR/cron/refresh_portfolios.php" || true
 sudo -u www-data php "$APP_DIR/cron/refresh_positions.php" || true
@@ -46,12 +45,8 @@ systemctl enable --now caddy
 systemctl reload caddy
 
 echo "==> systemd timers"
-cp "$APP_DIR/deploy/hl-refresh-portfolios.service" /etc/systemd/system/
-cp "$APP_DIR/deploy/hl-refresh-portfolios.timer"   /etc/systemd/system/
-cp "$APP_DIR/deploy/hl-refresh-positions.service"  /etc/systemd/system/
-cp "$APP_DIR/deploy/hl-refresh-positions.timer"    /etc/systemd/system/
-cp "$APP_DIR/deploy/hl-seed-traders.service"       /etc/systemd/system/
-cp "$APP_DIR/deploy/hl-seed-traders.timer"         /etc/systemd/system/
+cp "$APP_DIR/deploy/"hl-*.service /etc/systemd/system/
+cp "$APP_DIR/deploy/"hl-*.timer   /etc/systemd/system/
 systemctl daemon-reload
 systemctl enable --now hl-refresh-portfolios.timer
 systemctl enable --now hl-refresh-positions.timer
@@ -61,4 +56,4 @@ echo
 echo "==> DONE"
 echo "Visit https://talkchaintoday.com (DNS must already point here)"
 echo "Check timers: systemctl list-timers | grep hl-"
-echo "Logs:          journalctl -u hl-refresh-positions -f"
+echo "Logs:         journalctl -u hl-refresh-positions -f"

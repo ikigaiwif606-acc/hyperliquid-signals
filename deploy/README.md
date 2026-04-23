@@ -22,27 +22,18 @@ Alternative hosts that work identically: DigitalOcean ($4 droplet), Vultr, OVH.
 
 ## Phase 2 — Push code + bootstrap the box
 
-On your laptop:
-
-```bash
-cd ~/projects/hyperliquid-signals
-git init -b main
-git add -A
-git commit -m "initial"
-
-# Create an empty repo on GitHub named "hyperliquid-signals" (can be private)
-gh repo create hyperliquid-signals --private --source=. --push
-```
+The repo is already pushed to https://github.com/ikigaiwif606-acc/hyperliquid-signals (private).
 
 On the VPS (`ssh root@<IP>`):
 
 ```bash
-# replace ikigaiwif606-acc with your github handle
-export REPO=https://github.com/ikigaiwif606-acc/hyperliquid-signals.git
-curl -sSL https://raw.githubusercontent.com/ikigaiwif606-acc/hyperliquid-signals/main/deploy/setup.sh | REPO="$REPO" bash
+# Private repo: paste a GitHub PAT when prompted, OR add the VPS ssh key as a deploy key on the repo and use the SSH URL.
+git clone https://github.com/ikigaiwif606-acc/hyperliquid-signals.git /var/www/hyperliquid-signals
+cd /var/www/hyperliquid-signals
+bash deploy/setup.sh
 ```
 
-This installs PHP + Caddy + SQLite, clones the repo, seeds the DB, sets up systemd timers, starts Caddy. **Caddy will fail to get a cert until DNS points here — that's fine, we fix it in Phase 3.**
+This installs PHP + Caddy + SQLite, seeds the DB, sets up systemd timers, starts Caddy. **Caddy will fail to get a cert until DNS points here — that's fine, we fix it in Phase 3.**
 
 Verify:
 ```bash
