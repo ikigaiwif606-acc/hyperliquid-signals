@@ -4,7 +4,7 @@
 set -euo pipefail
 
 APP_DIR=/var/www/hyperliquid-signals
-REPO=${REPO:-https://github.com/YOUR_USER/hyperliquid-signals.git}
+REPO=${REPO:-https://github.com/ikigaiwif606-acc/hyperliquid-signals.git}
 
 echo "==> apt install"
 apt-get update

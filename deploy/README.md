@@ -37,9 +37,9 @@ gh repo create hyperliquid-signals --private --source=. --push
 On the VPS (`ssh root@<IP>`):
 
 ```bash
-# replace YOUR_USER with your github handle
-export REPO=https://github.com/YOUR_USER/hyperliquid-signals.git
-curl -sSL https://raw.githubusercontent.com/YOUR_USER/hyperliquid-signals/main/deploy/setup.sh | REPO="$REPO" bash
+# replace ikigaiwif606-acc with your github handle
+export REPO=https://github.com/ikigaiwif606-acc/hyperliquid-signals.git
+curl -sSL https://raw.githubusercontent.com/ikigaiwif606-acc/hyperliquid-signals/main/deploy/setup.sh | REPO="$REPO" bash
 ```
 
 This installs PHP + Caddy + SQLite, clones the repo, seeds the DB, sets up systemd timers, starts Caddy. **Caddy will fail to get a cert until DNS points here — that's fine, we fix it in Phase 3.**
