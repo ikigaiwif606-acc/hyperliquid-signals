@@ -15,15 +15,24 @@ if (!preg_match('/^0x[0-9a-f]{40}$/', $addr)) {
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Trader <?= htmlspecialchars(substr($addr, 0, 6) . '…' . substr($addr, -4)) ?> — HL Signals</title>
 <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
-<meta name="theme-color" content="#ffffff">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f1012" media="(prefers-color-scheme: dark)">
+<script>
+  (function() {
+    var t = localStorage.getItem('theme');
+    if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+  })();
+</script>
+<link rel="stylesheet" href="/assets/theme.css">
 <style>
-  :root { --bg:#fff; --surface:#fafafa; --text:#111; --muted:#666; --border:#eee; --border-strong:#ddd; --sky:#3b9eff; --green:#2dbe60; --red:#ff5a5f; --amber:#ffb800; --card-shadow: 0 2px 8px rgba(0,0,0,.06); }
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; }
   body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 14px; line-height: 1.4; -webkit-font-smoothing: antialiased; }
   a { color: inherit; text-decoration: none; } a:hover { text-decoration: underline; }
   .num { font-variant-numeric: tabular-nums; }
-  .topbar { height: 52px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 16px; padding: 0 16px; position: sticky; top: 0; z-index: 10; background: #fff; }
+  .topbar { height: 52px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 16px; padding: 0 16px; position: sticky; top: 0; z-index: 10; background: var(--bg); }
+  .theme-toggle { background: transparent; border: 1px solid var(--border-strong); border-radius: 6px; padding: 4px 9px; font-size: 14px; cursor: pointer; color: var(--text); line-height: 1; margin-left: 6px; }
+  .theme-toggle:hover { background: var(--surface); }
   .logo { font-weight: 800; font-size: 16px; letter-spacing: -.02em; }
   .logo .dot { color: var(--green); }
   .back { font-size: 13px; color: var(--muted); }
@@ -36,9 +45,9 @@ if (!preg_match('/^0x[0-9a-f]{40}$/', $addr)) {
   .hero h1 { font-size: 28px; font-weight: 800; letter-spacing: -.02em; margin: 0; }
   .hero .addr { font-size: 12px; color: var(--muted); margin-top: 4px; word-break: break-all; font-variant-numeric: tabular-nums; font-family: ui-monospace, Menlo, monospace; }
   .hero-actions { display: flex; gap: 8px; }
-  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border-strong); background: #fff; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--text); }
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border-strong); background: var(--bg); font-size: 13px; font-weight: 600; cursor: pointer; color: var(--text); }
   .btn:hover { background: var(--surface); text-decoration: none; }
-  .btn.primary { background: #111; color: #fff; border-color: #111; }
+  .btn.primary { background: var(--tab-active-bg); color: var(--tab-active-text); border-color: var(--tab-active-bg); }
 
   .stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 20px; }
   .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; }
@@ -48,12 +57,12 @@ if (!preg_match('/^0x[0-9a-f]{40}$/', $addr)) {
 
   h2 { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 28px 0 10px; }
 
-  .panel { background: #fff; border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--card-shadow); overflow: hidden; }
+  .panel { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--card-shadow); overflow: hidden; }
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
   th, td { padding: 10px 12px; text-align: left; border-top: 1px solid var(--border); }
   th { background: var(--surface); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 700; border-top: 0; position: sticky; top: 0; }
   td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
-  tbody tr:hover { background: var(--surface); }
+  tbody tr:hover { background: var(--row-hover); }
   .pill { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 999px; color: #fff; text-transform: uppercase; letter-spacing: .04em; }
   .pill.green { background: var(--green); } .pill.red { background: var(--red); }
   .up { color: var(--green); } .down { color: var(--red); } .mute { color: var(--muted); }
@@ -73,6 +82,7 @@ if (!preg_match('/^0x[0-9a-f]{40}$/', $addr)) {
   <a href="/" class="logo">🚀 HL<span class="dot">.</span>SIGNALS</a>
   <a href="/" class="back">← back</a>
   <span class="live"><span class="pulse"></span>live</span>
+  <button class="theme-toggle" id="theme-toggle" title="Toggle theme" aria-label="Toggle theme">🌙</button>
 </header>
 
 <main class="wrap">
@@ -91,6 +101,19 @@ if (!preg_match('/^0x[0-9a-f]{40}$/', $addr)) {
 </footer>
 
 <script>
+(function () {
+  const root = document.documentElement, btn = document.getElementById('theme-toggle');
+  const current = () => root.getAttribute('data-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  const paint = () => btn.textContent = current() === 'dark' ? '☀️' : '🌙';
+  btn.addEventListener('click', () => {
+    const next = current() === 'dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    localStorage.setItem('theme', next);
+    paint();
+  });
+  paint();
+})();
+
 const ADDR = <?= json_encode($addr) ?>;
 const shortAddr = a => a ? a.slice(0,6) + '…' + a.slice(-4) : '—';
 const money = n => {

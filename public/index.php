@@ -34,25 +34,21 @@ function toggle_url(string $key): string {
 <title>HL Signals — follow the whales on Hyperliquid</title>
 <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
 <meta name="description" content="Realtime top traders and signals on Hyperliquid.">
-<meta name="theme-color" content="#ffffff">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f1012" media="(prefers-color-scheme: dark)">
 <meta property="og:title" content="HL Signals">
 <meta property="og:description" content="Follow the whales on Hyperliquid.">
 <meta property="og:image" content="https://talkchaintoday.com/assets/og-image.svg">
 <meta name="twitter:card" content="summary_large_image">
+<script>
+  // set theme before paint to avoid flash
+  (function() {
+    var t = localStorage.getItem('theme');
+    if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+  })();
+</script>
+<link rel="stylesheet" href="/assets/theme.css">
 <style>
-  :root {
-    --bg: #ffffff;
-    --surface: #fafafa;
-    --text: #111;
-    --muted: #666;
-    --border: #eee;
-    --border-strong: #ddd;
-    --sky: #3b9eff;
-    --green: #2dbe60;
-    --red: #ff5a5f;
-    --amber: #ffb800;
-    --card-shadow: 0 2px 8px rgba(0,0,0,.06);
-  }
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; }
   body {
@@ -86,8 +82,14 @@ function toggle_url(string $key): string {
     padding: 6px 12px; border-radius: 6px; font-size: 14px;
     color: var(--muted); font-weight: 600;
   }
-  .tab:hover { background: #f4f4f4; text-decoration: none; }
-  .tab.active { background: #111; color: #fff; }
+  .tab:hover { background: var(--tab-hover-bg); text-decoration: none; }
+  .tab.active { background: var(--tab-active-bg); color: var(--tab-active-text); }
+  .theme-toggle {
+    background: transparent; border: 1px solid var(--border-strong); border-radius: 6px;
+    padding: 4px 9px; font-size: 14px; cursor: pointer; color: var(--text); line-height: 1;
+    margin-left: 6px;
+  }
+  .theme-toggle:hover { background: var(--surface); }
   .topbar .live { margin-left: auto; font-size: 12px; color: var(--muted); }
   .topbar .live .pulse {
     display: inline-block; width: 6px; height: 6px; border-radius: 50%;
@@ -116,11 +118,11 @@ function toggle_url(string $key): string {
   .chip {
     display: inline-flex; align-items: center; gap: 6px;
     padding: 5px 10px; border-radius: 999px; font-size: 12.5px;
-    border: 1px solid var(--border-strong); background: #fff; color: var(--text);
+    border: 1px solid var(--border-strong); background: var(--bg); color: var(--text);
     font-weight: 600; cursor: pointer;
   }
   .chip:hover { background: var(--surface); text-decoration: none; }
-  .chip.active { background: #111; color: #fff; border-color: #111; }
+  .chip.active { background: var(--tab-active-bg); color: var(--tab-active-text); border-color: var(--tab-active-bg); }
   .chip .em { font-size: 14px; }
 
   /* STATS ROW */
@@ -142,13 +144,13 @@ function toggle_url(string $key): string {
     gap: 10px;
   }
   .card {
-    background: #fff; border: 1px solid var(--border); border-radius: 10px;
+    background: var(--bg); border: 1px solid var(--border); border-radius: 10px;
     padding: 12px; box-shadow: var(--card-shadow);
     display: flex; flex-direction: column; gap: 8px;
     position: relative;
     transition: transform .08s, box-shadow .08s;
   }
-  .card:hover { box-shadow: 0 4px 14px rgba(0,0,0,.08); text-decoration: none; transform: translateY(-1px); }
+  .card:hover { box-shadow: var(--card-shadow-hover); text-decoration: none; transform: translateY(-1px); }
   .card .head {
     display: flex; align-items: center; justify-content: space-between; gap: 8px;
   }
@@ -180,7 +182,7 @@ function toggle_url(string $key): string {
   .row .v.down { color: var(--red); }
   .row .v.mute { color: var(--muted); font-weight: 600; }
 
-  .bar { height: 6px; background: #f0f0f0; border-radius: 3px; overflow: hidden; display: flex; }
+  .bar { height: 6px; background: var(--bar-bg); border-radius: 3px; overflow: hidden; display: flex; }
   .bar .seg-long { background: var(--green); }
   .bar .seg-short { background: var(--red); }
   .bar-labels { display: flex; justify-content: space-between; font-size: 11px; margin-top: 3px; }
@@ -213,6 +215,7 @@ function toggle_url(string $key): string {
     <a class="tab <?= $view === 'coins'   ? 'active' : '' ?>" href="<?= url_with(['view' => 'coins']) ?>">🪙 Coins</a>
   </nav>
   <span class="live"><span class="pulse"></span>live</span>
+  <button class="theme-toggle" id="theme-toggle" title="Toggle theme" aria-label="Toggle theme">🌙</button>
 </header>
 
 <div class="shell">
@@ -282,6 +285,24 @@ function toggle_url(string $key): string {
 </footer>
 
 <script>
+  // -------- theme toggle --------
+  (function () {
+    const root = document.documentElement;
+    const btn = document.getElementById('theme-toggle');
+    function current() {
+      return root.getAttribute('data-theme') ||
+        (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    }
+    function paint() { btn.textContent = current() === 'dark' ? '☀️' : '🌙'; }
+    btn.addEventListener('click', () => {
+      const next = current() === 'dark' ? 'light' : 'dark';
+      root.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+      paint();
+    });
+    paint();
+  })();
+
   const VIEW = document.getElementById('grid').dataset.view;
   const SORT = document.getElementById('grid').dataset.sort;
   const FILTERS = JSON.parse(document.getElementById('grid').dataset.filters);

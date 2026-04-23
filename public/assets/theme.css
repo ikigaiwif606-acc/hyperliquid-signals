@@ -1,0 +1,62 @@
+/* shared theme — light by default, dark via [data-theme="dark"] on :root */
+:root {
+  --bg: #ffffff;
+  --surface: #fafafa;
+  --text: #111111;
+  --muted: #666666;
+  --border: #eeeeee;
+  --border-strong: #dddddd;
+  --sky: #3b9eff;
+  --green: #2dbe60;
+  --red: #ff5a5f;
+  --amber: #ffb800;
+  --card-shadow: 0 2px 8px rgba(0,0,0,.06);
+  --card-shadow-hover: 0 4px 14px rgba(0,0,0,.08);
+  --row-hover: #fafafa;
+  --bar-bg: #f0f0f0;
+  --tab-active-bg: #111111;
+  --tab-active-text: #ffffff;
+  --tab-hover-bg: #f4f4f4;
+}
+
+:root[data-theme="dark"] {
+  --bg: #0f1012;
+  --surface: #17181b;
+  --text: #ececec;
+  --muted: #8a8e96;
+  --border: #26282d;
+  --border-strong: #353841;
+  --sky: #4aa7ff;
+  --green: #34cc6b;
+  --red: #ff666b;
+  --amber: #ffc01f;
+  --card-shadow: 0 2px 8px rgba(0,0,0,.35);
+  --card-shadow-hover: 0 6px 18px rgba(0,0,0,.5);
+  --row-hover: #1b1c20;
+  --bar-bg: #26282d;
+  --tab-active-bg: #ececec;
+  --tab-active-text: #0f1012;
+  --tab-hover-bg: #1b1c20;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --bg: #0f1012;
+    --surface: #17181b;
+    --text: #ececec;
+    --muted: #8a8e96;
+    --border: #26282d;
+    --border-strong: #353841;
+    --sky: #4aa7ff;
+    --green: #34cc6b;
+    --red: #ff666b;
+    --amber: #ffc01f;
+    --card-shadow: 0 2px 8px rgba(0,0,0,.35);
+    --card-shadow-hover: 0 6px 18px rgba(0,0,0,.5);
+    --row-hover: #1b1c20;
+    --bar-bg: #26282d;
+    --tab-active-bg: #ececec;
+    --tab-active-text: #0f1012;
+    --tab-hover-bg: #1b1c20;
+  }
+}
