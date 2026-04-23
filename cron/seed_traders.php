@@ -5,9 +5,20 @@ require __DIR__ . '/../lib/hl.php';
 
 db_init();
 
-// Discovery via recentTrades: each call returns 10 trades × 2 users = 20 addresses.
-// Hit the most active perps so we collect whales, not retail.
-$coins = ['BTC', 'ETH', 'SOL', 'HYPE', 'XRP', 'DOGE', 'FARTCOIN', 'PUMP', 'SUI', 'kPEPE', 'WLD', 'AVAX'];
+// Discovery: fetch the full perp universe, then recentTrades for each coin.
+// Each call returns ~10 trades × 2 users = up to 20 addresses.
+// Throttle 100ms between calls → ~230 coins = ~25s runtime. Well under rate limits.
+$meta = hl_info(['type' => 'meta']);
+$universe = $meta['universe'] ?? [];
+$coins = [];
+foreach ($universe as $u) {
+    if (!empty($u['name']) && empty($u['isDelisted'])) $coins[] = $u['name'];
+}
+if (!$coins) {
+    fwrite(STDERR, "no coins in universe — aborting\n");
+    exit(1);
+}
+echo "universe: " . count($coins) . " coins\n";
 
 $now = time();
 $ins = db()->prepare(
@@ -16,10 +27,11 @@ $ins = db()->prepare(
 );
 
 $seen = 0;
+$processed = 0;
 foreach ($coins as $coin) {
     try {
         $trades = hl_info(['type' => 'recentTrades', 'coin' => $coin]);
-        foreach ($trades as $t) {
+        foreach ($trades ?: [] as $t) {
             foreach ($t['users'] ?? [] as $addr) {
                 $addr = strtolower($addr);
                 if (!preg_match('/^0x[0-9a-f]{40}$/', $addr)) continue;
@@ -27,12 +39,12 @@ foreach ($coins as $coin) {
                 $seen++;
             }
         }
-        echo "$coin · running total: $seen\n";
-        usleep(150_000);
+        $processed++;
     } catch (Throwable $e) {
         fwrite(STDERR, "fail $coin: " . $e->getMessage() . "\n");
     }
+    usleep(100_000);
 }
 
 $total = (int)db()->query('SELECT COUNT(*) FROM traders')->fetchColumn();
-echo "done · traders table: $total unique addresses\n";
+printf("processed=%d/%d, seen=%d, total_traders=%d\n", $processed, count($coins), $seen, $total);

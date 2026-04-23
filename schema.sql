@@ -46,3 +46,18 @@ CREATE INDEX IF NOT EXISTS idx_portfolio_pnl_week ON portfolios(pnl_week DESC);
 CREATE INDEX IF NOT EXISTS idx_portfolio_pnl_month ON portfolios(pnl_month DESC);
 CREATE INDEX IF NOT EXISTS idx_positions_unrealized ON positions(unrealized_pnl DESC);
 CREATE INDEX IF NOT EXISTS idx_positions_updated ON positions(updated_at DESC);
+
+CREATE TABLE IF NOT EXISTS signals (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  created_at INTEGER NOT NULL,
+  coin TEXT NOT NULL,
+  direction TEXT NOT NULL,
+  consensus_count INTEGER NOT NULL,
+  top_n INTEGER NOT NULL,
+  avg_entry REAL,
+  total_notional REAL,
+  mark_at_signal REAL,
+  status TEXT NOT NULL DEFAULT 'active'
+);
+CREATE INDEX IF NOT EXISTS idx_signals_created ON signals(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_signals_coin_dir ON signals(coin, direction, status);

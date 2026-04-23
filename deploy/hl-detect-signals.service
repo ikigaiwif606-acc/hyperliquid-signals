@@ -1,0 +1,18 @@
+[Unit]
+Description=HL Signals — detect top-trader consensus signals
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=www-data
+WorkingDirectory=/var/www/hyperliquid-signals
+ExecStart=/usr/bin/flock -n /var/www/hyperliquid-signals/data/hl-detect-signals.lock /usr/bin/php /var/www/hyperliquid-signals/cron/detect_signals.php
+Nice=10
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+ReadWritePaths=/var/www/hyperliquid-signals/data

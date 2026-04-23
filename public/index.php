@@ -22,7 +22,7 @@ function human_age(int $ts): string {
 }
 
 $window = $_GET['w'] ?? 'day';
-if (!in_array($window, ['day', 'week', 'month'], true)) $window = 'day';
+if (!in_array($window, ['day', 'week', 'month', 'score'], true)) $window = 'day';
 ?>
 <!doctype html>
 <html lang="en">
@@ -63,7 +63,7 @@ if (!in_array($window, ['day', 'week', 'month'], true)) $window = 'day';
     <a href="/" class="font-black tracking-tight text-base">HL<span class="text-emerald-400">.</span>SIGNALS</a>
     <div class="flex items-center gap-5">
       <div class="inline-flex rounded border border-zinc-800 text-xs overflow-hidden">
-        <?php foreach (['day' => '24h', 'week' => '7d', 'month' => '30d'] as $w => $label): ?>
+        <?php foreach (['day' => '24h', 'week' => '7d', 'month' => '30d', 'score' => 'Score'] as $w => $label): ?>
           <a href="?w=<?= $w ?>" class="px-3 py-1.5 <?= $w === $window ? 'bg-zinc-800 text-white' : 'text-zinc-400 hover:text-white' ?>"><?= $label ?></a>
         <?php endforeach; ?>
       </div>
@@ -75,7 +75,22 @@ if (!in_array($window, ['day', 'week', 'month'], true)) $window = 'day';
   </div>
 </header>
 
-<main class="max-w-7xl mx-auto px-6 py-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
+<main class="max-w-7xl mx-auto px-6 py-8">
+
+  <section class="mb-10" id="signals-wrap">
+    <div class="flex items-baseline justify-between mb-4">
+      <h2 class="text-sm font-semibold text-zinc-400 uppercase tracking-wider">
+        Signals
+        <span class="text-[10px] text-zinc-500 ml-2 font-normal normal-case">≥8 of top-20 on same side within 24h</span>
+      </h2>
+      <span class="text-[10px] text-zinc-600 mono">refresh 60s</span>
+    </div>
+    <div id="signals" hx-get="/api.php?q=signals" hx-trigger="load, every 60s" hx-swap="innerHTML" class="min-h-[40px]">
+      <div class="text-zinc-600 text-sm">loading…</div>
+    </div>
+  </section>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
   <section>
     <div class="flex items-baseline justify-between mb-4">
@@ -110,6 +125,7 @@ if (!in_array($window, ['day', 'week', 'month'], true)) $window = 'day';
     </div>
   </section>
 
+</div>
 </main>
 
 <footer class="border-t border-zinc-900 py-6 mt-12">
@@ -128,6 +144,7 @@ if (!in_array($window, ['day', 'week', 'month'], true)) $window = 'day';
       const data = JSON.parse(e.detail.serverResponse);
       if (target === 'traders') e.detail.serverResponse = renderTraders(data);
       else if (target === 'positions') e.detail.serverResponse = renderPositions(data);
+      else if (target === 'signals') e.detail.serverResponse = renderSignals(data);
     } catch {}
   });
 
@@ -145,6 +162,43 @@ if (!in_array($window, ['day', 'week', 'month'], true)) $window = 'day';
     if (d < 3600) return Math.floor(d/60) + 'm';
     if (d < 86400) return Math.floor(d/3600) + 'h';
     return Math.floor(d/86400) + 'd';
+  };
+
+  function renderSignals(rows) {
+    if (!rows || !rows.length) return `<div class="border border-dashed border-zinc-800 rounded p-6 text-center text-zinc-600 text-sm">no active consensus signals · check back soon</div>`;
+    return `<div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">` + rows.map(r => {
+      const dirCls = r.direction === 'long' ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' : 'bg-red-500/15 text-red-400 border-red-500/30';
+      const arrow = r.direction === 'long' ? '↑' : '↓';
+      const moveCls = r.mark_at_signal && r.avg_entry
+        ? (r.direction === 'long'
+            ? (r.mark_at_signal > r.avg_entry ? 'up' : 'down')
+            : (r.mark_at_signal < r.avg_entry ? 'up' : 'down'))
+        : 'text-zinc-500';
+      const movePct = r.mark_at_signal && r.avg_entry
+        ? ((r.mark_at_signal / r.avg_entry - 1) * 100 * (r.direction === 'long' ? 1 : -1)).toFixed(1) + '%'
+        : '—';
+      return `<a href="/coin.php?c=${r.coin}" class="block bg-zinc-900/40 border border-zinc-800 rounded p-4 hover:border-emerald-500/50 transition">
+        <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center gap-2">
+            <span class="mono text-lg font-bold">${r.coin}</span>
+            <span class="text-[10px] ${dirCls} border px-1.5 py-0.5 rounded font-semibold uppercase">${arrow} ${r.direction}</span>
+          </div>
+          <span class="text-[10px] text-zinc-500">${age(r.created_at)}</span>
+        </div>
+        <div class="text-sm text-zinc-300"><span class="mono font-bold text-emerald-400">${r.consensus_count}/${r.top_n}</span> top traders</div>
+        <div class="mono text-xs text-zinc-500 mt-2 flex justify-between">
+          <span>entry ${fmtPriceInline(r.avg_entry)}</span>
+          <span class="${moveCls}">${movePct}</span>
+        </div>
+        <div class="mono text-xs text-zinc-500 mt-1">notional ${money(r.total_notional)}</div>
+      </a>`;
+    }).join('') + `</div>`;
+  }
+  const fmtPriceInline = n => {
+    if (!n) return '—';
+    if (n >= 1000) return '$' + Number(n).toLocaleString(undefined, {maximumFractionDigits:2});
+    if (n >= 1) return '$' + Number(n).toFixed(3);
+    return '$' + Number(n).toFixed(5);
   };
 
   function renderTraders(rows) {
@@ -184,7 +238,7 @@ if (!in_array($window, ['day', 'week', 'month'], true)) $window = 'day';
         <div class="mono text-zinc-600 text-xs w-5">${i+1}</div>
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-2">
-            <span class="mono font-bold">${r.coin}</span>
+            <a href="/coin.php?c=${r.coin}" class="mono font-bold hover:text-emerald-400" onclick="event.stopPropagation()">${r.coin}</a>
             <span class="text-[10px] ${sideCls} px-1.5 py-0.5 rounded font-semibold uppercase">${r.side}</span>
             <span class="mono text-[10px] text-zinc-500">${Number(r.leverage).toFixed(1)}×</span>
           </div>

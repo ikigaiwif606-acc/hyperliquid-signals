@@ -11,6 +11,32 @@ $q = $_GET['q'] ?? '';
 switch ($q) {
     case 'traders':
         $window = $_GET['w'] ?? 'day';
+        if ($window === 'score') {
+            // Composite: PnL 30d weighted by efficiency (PnL/Volume) and consistency (PnL 7d sign)
+            // Formula rewards profitable traders with high PnL-per-volume and recent continued edge.
+            $sql = "
+                SELECT t.address, t.label,
+                       p.pnl_month AS pnl,
+                       p.vlm_month AS volume,
+                       p.account_value,
+                       p.pnl_week,
+                       (
+                         p.pnl_month
+                         * (1.0 + 3.0 * (p.pnl_month / NULLIF(p.vlm_month, 0)))
+                         * CASE WHEN p.pnl_week > 0 THEN 1.2 ELSE 0.8 END
+                       ) AS score
+                FROM portfolios p
+                JOIN traders t USING (address)
+                WHERE COALESCE(t.role, 'user') = 'user'
+                  AND p.vlm_month >= 500000
+                  AND p.account_value >= 10000
+                  AND p.pnl_month > 0
+                ORDER BY score DESC
+                LIMIT 20
+            ";
+            echo json_encode(db()->query($sql)->fetchAll());
+            break;
+        }
         $col = match ($window) {
             'week' => 'pnl_week',
             'month' => 'pnl_month',
@@ -28,6 +54,7 @@ switch ($q) {
             JOIN traders t USING (address)
             WHERE COALESCE(t.role, 'user') = 'user'
               AND p.vlm_month >= 100000
+              AND p.account_value >= 5000
             ORDER BY p.$col DESC
             LIMIT 20
         ";
@@ -55,6 +82,71 @@ switch ($q) {
             'positions' => (int)db()->query('SELECT COUNT(*) FROM positions')->fetchColumn(),
             'last_portfolio' => (int)db()->query('SELECT MAX(updated_at) FROM portfolios')->fetchColumn(),
             'last_position' => (int)db()->query('SELECT MAX(updated_at) FROM positions')->fetchColumn(),
+        ]);
+        break;
+
+    case 'signals':
+        $sql = "
+            SELECT id, created_at, coin, direction, consensus_count, top_n,
+                   avg_entry, total_notional, mark_at_signal, status
+            FROM signals
+            WHERE status = 'active'
+            ORDER BY created_at DESC
+            LIMIT 20
+        ";
+        echo json_encode(db()->query($sql)->fetchAll());
+        break;
+
+    case 'coin':
+        $coin = strtoupper(trim((string)($_GET['c'] ?? '')));
+        if (!preg_match('/^[A-Z0-9]{1,20}$/', $coin)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'bad coin']);
+            break;
+        }
+        // current mark from allMids (cheap call)
+        $mids = hl_all_mids();
+        $mark = isset($mids[$coin]) ? (float)$mids[$coin] : null;
+
+        // who's long and short, ranked by notional
+        $sql = "
+            SELECT p.address, p.side, p.size, p.entry_px, p.mark_px,
+                   p.leverage, p.unrealized_pnl, p.unrealized_pct, p.updated_at,
+                   pt.pnl_month, pt.vlm_month, pt.account_value
+            FROM positions p
+            LEFT JOIN portfolios pt ON pt.address = p.address
+            WHERE p.coin = :c
+            ORDER BY p.mark_px * p.size DESC
+            LIMIT 100
+        ";
+        $stmt = db()->prepare($sql);
+        $stmt->execute([':c' => $coin]);
+        $positions = $stmt->fetchAll();
+
+        // aggregates
+        $longs = array_filter($positions, fn($r) => $r['side'] === 'long');
+        $shorts = array_filter($positions, fn($r) => $r['side'] === 'short');
+        $sumNotional = fn($rows) => array_sum(array_map(fn($r) => (float)$r['mark_px'] * (float)$r['size'], $rows));
+        $avgEntry = function ($rows) {
+            $wsum = $szsum = 0.0;
+            foreach ($rows as $r) {
+                $sz = (float)$r['size'];
+                $wsum += (float)$r['entry_px'] * $sz;
+                $szsum += $sz;
+            }
+            return $szsum > 0 ? $wsum / $szsum : 0;
+        };
+
+        echo json_encode([
+            'coin' => $coin,
+            'mark' => $mark,
+            'long_count' => count($longs),
+            'short_count' => count($shorts),
+            'long_notional' => $sumNotional($longs),
+            'short_notional' => $sumNotional($shorts),
+            'long_avg_entry' => $avgEntry($longs),
+            'short_avg_entry' => $avgEntry($shorts),
+            'positions' => $positions,
         ]);
         break;
 
