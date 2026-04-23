@@ -30,6 +30,13 @@ if (!in_array($window, ['day', 'week', 'month'], true)) $window = 'day';
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>HL Signals — realtime top traders on Hyperliquid</title>
+<link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+<link rel="alternate icon" href="/assets/favicon.svg">
+<meta name="description" content="Realtime top traders and top 10 profitable open positions on Hyperliquid.">
+<meta name="theme-color" content="#0a0a0a">
+<meta property="og:title" content="HL Signals">
+<meta property="og:description" content="Realtime top traders on Hyperliquid.">
+<meta property="og:type" content="website">
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://unpkg.com/htmx.org@2.0.3" integrity="sha384-0895/pl2MU10Hqc6jd4RvrthNlDiE9U1tWmX7WRESftEDRosgxNsQG/Ze9YMRzHq" crossorigin="anonymous"></script>
 <style>
