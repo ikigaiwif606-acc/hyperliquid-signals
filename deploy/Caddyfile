@@ -1,0 +1,32 @@
+# Production Caddy config for talkchaintoday.com
+# - Auto HTTPS via Let's Encrypt
+# - PHP via php-fpm
+# - Redirects www -> apex
+# - Aggressive cache for static, no-cache for dynamic JSON
+
+talkchaintoday.com {
+    root * /var/www/hyperliquid-signals/public
+    encode zstd gzip
+
+    php_fastcgi unix//run/php/php8.3-fpm.sock
+
+    @api path /api.php
+    header @api {
+        Cache-Control "no-store"
+        -Server
+    }
+
+    @static path /assets/*
+    header @static Cache-Control "public, max-age=604800, immutable"
+
+    file_server
+
+    log {
+        output file /var/log/caddy/talkchaintoday.access.log
+        format console
+    }
+}
+
+www.talkchaintoday.com {
+    redir https://talkchaintoday.com{uri} permanent
+}

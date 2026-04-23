@@ -1,0 +1,9 @@
+[Unit]
+Description=HL Signals — discover new traders (every 10 min)
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=10min
+
+[Install]
+WantedBy=timers.target

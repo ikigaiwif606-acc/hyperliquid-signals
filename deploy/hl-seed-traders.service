@@ -1,0 +1,10 @@
+[Unit]
+Description=HL Signals — discover new traders via recentTrades
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=www-data
+WorkingDirectory=/var/www/hyperliquid-signals
+ExecStart=/usr/bin/php /var/www/hyperliquid-signals/cron/seed_traders.php
+Nice=15

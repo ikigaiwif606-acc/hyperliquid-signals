@@ -1,0 +1,10 @@
+[Unit]
+Description=HL Signals — refresh portfolios
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=www-data
+WorkingDirectory=/var/www/hyperliquid-signals
+ExecStart=/usr/bin/php /var/www/hyperliquid-signals/cron/refresh_portfolios.php
+Nice=10
