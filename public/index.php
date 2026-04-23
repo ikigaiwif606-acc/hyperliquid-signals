@@ -34,10 +34,18 @@ if (!in_array($window, ['day', 'week', 'month'], true)) $window = 'day';
 <link rel="alternate icon" href="/assets/favicon.svg">
 <meta name="description" content="Realtime top traders and top 10 profitable open positions on Hyperliquid.">
 <meta name="theme-color" content="#0a0a0a">
-<meta property="og:title" content="HL Signals">
-<meta property="og:description" content="Realtime top traders on Hyperliquid.">
+<meta property="og:title" content="HL Signals — realtime top traders on Hyperliquid">
+<meta property="og:description" content="Follow the whales. Realtime top traders + top 10 profitable open positions on Hyperliquid.">
 <meta property="og:type" content="website">
-<script src="https://cdn.tailwindcss.com"></script>
+<meta property="og:url" content="https://talkchaintoday.com/">
+<meta property="og:image" content="https://talkchaintoday.com/assets/og-image.svg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="HL Signals">
+<meta name="twitter:description" content="Follow the whales. Realtime top traders on Hyperliquid.">
+<meta name="twitter:image" content="https://talkchaintoday.com/assets/og-image.svg">
+<link rel="stylesheet" href="/assets/tailwind.css">
 <script src="https://unpkg.com/htmx.org@2.0.3" integrity="sha384-0895/pl2MU10Hqc6jd4RvrthNlDiE9U1tWmX7WRESftEDRosgxNsQG/Ze9YMRzHq" crossorigin="anonymous"></script>
 <style>
   body { font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }

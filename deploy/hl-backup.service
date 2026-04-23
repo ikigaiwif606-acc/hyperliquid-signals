@@ -1,0 +1,12 @@
+[Unit]
+Description=HL Signals — nightly SQLite backup
+
+[Service]
+Type=oneshot
+User=root
+ExecStart=/var/www/hyperliquid-signals/cron/backup.sh
+Nice=19
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/var/backups/hl-signals /var/www/hyperliquid-signals/data

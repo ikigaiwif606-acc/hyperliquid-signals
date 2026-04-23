@@ -17,7 +17,7 @@ if (!preg_match('/^0x[0-9a-f]{40}$/', $addr)) {
 <title>Trader <?= htmlspecialchars(substr($addr, 0, 6) . '…' . substr($addr, -4)) ?> — HL Signals</title>
 <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
 <meta name="theme-color" content="#0a0a0a">
-<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="/assets/tailwind.css">
 <style>
   body { font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
   .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-variant-numeric: tabular-nums; }

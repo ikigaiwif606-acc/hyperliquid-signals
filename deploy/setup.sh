@@ -15,7 +15,7 @@ apt-get update
 DEBIAN_FRONTEND=noninteractive apt-get install -y \
     curl git debian-keyring debian-archive-keyring apt-transport-https \
     php8.3-cli php8.3-fpm php8.3-sqlite3 php8.3-curl \
-    sqlite3 ca-certificates ufw
+    sqlite3 ca-certificates ufw fail2ban logrotate
 
 echo "==> install Caddy"
 if ! command -v caddy >/dev/null; then
@@ -41,8 +41,24 @@ sudo -u www-data php "$APP_DIR/cron/refresh_positions.php" || true
 
 echo "==> caddy"
 cp "$APP_DIR/deploy/Caddyfile" /etc/caddy/Caddyfile
+cp "$APP_DIR/deploy/caddy-logrotate" /etc/logrotate.d/caddy
 systemctl enable --now caddy
 systemctl reload caddy
+
+echo "==> backup dir"
+mkdir -p /var/backups/hl-signals
+
+echo "==> ssh hardening"
+# Allow key auth only, no passwords, root via key only
+sed -i -E 's|^#?PasswordAuthentication.*|PasswordAuthentication no|' /etc/ssh/sshd_config
+sed -i -E 's|^#?PermitRootLogin.*|PermitRootLogin prohibit-password|' /etc/ssh/sshd_config
+sed -i -E 's|^#?PubkeyAuthentication.*|PubkeyAuthentication yes|' /etc/ssh/sshd_config
+grep -qE '^PasswordAuthentication no' /etc/ssh/sshd_config || echo 'PasswordAuthentication no' >> /etc/ssh/sshd_config
+grep -qE '^PermitRootLogin prohibit-password' /etc/ssh/sshd_config || echo 'PermitRootLogin prohibit-password' >> /etc/ssh/sshd_config
+sshd -t && systemctl reload ssh || echo "!! sshd config test failed — not reloading"
+
+echo "==> fail2ban"
+systemctl enable --now fail2ban
 
 echo "==> systemd timers"
 cp "$APP_DIR/deploy/"hl-*.service /etc/systemd/system/
@@ -51,6 +67,7 @@ systemctl daemon-reload
 systemctl enable --now hl-refresh-portfolios.timer
 systemctl enable --now hl-refresh-positions.timer
 systemctl enable --now hl-seed-traders.timer
+systemctl enable --now hl-backup.timer
 
 echo
 echo "==> DONE"
