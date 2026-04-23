@@ -59,15 +59,15 @@ if (!in_array($window, ['day', 'week', 'month', 'score'], true)) $window = 'day'
 <body class="bg-[#0a0a0a] text-zinc-100">
 
 <header class="border-b border-zinc-900">
-  <div class="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
-    <a href="/" class="font-black tracking-tight text-base">HL<span class="text-emerald-400">.</span>SIGNALS</a>
-    <div class="flex items-center gap-5">
-      <div class="inline-flex rounded border border-zinc-800 text-xs overflow-hidden">
+  <div class="max-w-6xl mx-auto px-5 h-11 flex items-center justify-between">
+    <a href="/" class="font-black tracking-tight text-sm">HL<span class="text-emerald-400">.</span>SIGNALS</a>
+    <div class="flex items-center gap-4">
+      <div class="inline-flex rounded border border-zinc-800 text-[11px] overflow-hidden">
         <?php foreach (['day' => '24h', 'week' => '7d', 'month' => '30d', 'score' => 'Score'] as $w => $label): ?>
-          <a href="?w=<?= $w ?>" class="px-3 py-1.5 <?= $w === $window ? 'bg-zinc-800 text-white' : 'text-zinc-400 hover:text-white' ?>"><?= $label ?></a>
+          <a href="?w=<?= $w ?>" class="px-2.5 py-1 <?= $w === $window ? 'bg-zinc-800 text-white' : 'text-zinc-400 hover:text-white' ?>"><?= $label ?></a>
         <?php endforeach; ?>
       </div>
-      <span class="flex items-center gap-2 text-xs text-zinc-500">
+      <span class="flex items-center gap-1.5 text-[11px] text-zinc-500">
         <span class="pulse-dot inline-block w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
         live
       </span>
@@ -75,61 +75,57 @@ if (!in_array($window, ['day', 'week', 'month', 'score'], true)) $window = 'day'
   </div>
 </header>
 
-<main class="max-w-7xl mx-auto px-6 py-8">
+<main class="max-w-6xl mx-auto px-5 py-6">
 
-  <section class="mb-10" id="signals-wrap">
-    <div class="flex items-baseline justify-between mb-4">
-      <h2 class="text-sm font-semibold text-zinc-400 uppercase tracking-wider">
-        Signals
-        <span class="text-[10px] text-zinc-500 ml-2 font-normal normal-case">≥8 of top-20 on same side within 24h</span>
+  <section class="mb-6" id="signals-wrap">
+    <div class="flex items-baseline justify-between mb-2">
+      <h2 class="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">
+        Signals <span class="text-zinc-600 font-normal normal-case">· ≥8 of top-20 same side</span>
       </h2>
-      <span class="text-[10px] text-zinc-600 mono">refresh 60s</span>
+      <span class="text-[10px] text-zinc-700 mono">60s</span>
     </div>
-    <div id="signals" hx-get="/api.php?q=signals" hx-trigger="load, every 60s" hx-swap="innerHTML" class="min-h-[40px]">
-      <div class="text-zinc-600 text-sm">loading…</div>
+    <div id="signals" hx-get="/api.php?q=signals" hx-trigger="load, every 60s" hx-swap="innerHTML" class="min-h-[30px]">
+      <div class="text-zinc-700 text-xs">loading…</div>
     </div>
   </section>
 
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
 
   <section>
-    <div class="flex items-baseline justify-between mb-4">
-      <h2 class="text-sm font-semibold text-zinc-400 uppercase tracking-wider">Top Traders</h2>
-      <span class="text-[10px] text-zinc-600 mono">refresh 30s</span>
+    <div class="flex items-baseline justify-between mb-2">
+      <h2 class="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">Top Traders</h2>
+      <span class="text-[10px] text-zinc-700 mono">30s</span>
     </div>
-
     <div id="traders"
          hx-get="/api.php?q=traders&w=<?= htmlspecialchars($window) ?>"
          hx-trigger="load, every 30s"
          hx-swap="innerHTML"
-         class="border border-zinc-900 rounded min-h-[300px]">
-      <div class="p-6 text-zinc-600 text-sm">loading…</div>
+         class="border border-zinc-900 rounded min-h-[280px]">
+      <div class="p-4 text-zinc-700 text-xs">loading…</div>
     </div>
   </section>
 
   <section>
-    <div class="flex items-baseline justify-between mb-4">
-      <h2 class="text-sm font-semibold text-zinc-400 uppercase tracking-wider">
-        Top 10 Profitable Positions
-        <span class="text-emerald-400 text-[10px] ml-1">live</span>
+    <div class="flex items-baseline justify-between mb-2">
+      <h2 class="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">
+        Top 10 Profitable Positions <span class="text-emerald-400">· live</span>
       </h2>
-      <span class="text-[10px] text-zinc-600 mono">refresh 15s</span>
+      <span class="text-[10px] text-zinc-700 mono">15s</span>
     </div>
-
     <div id="positions"
          hx-get="/api.php?q=positions"
          hx-trigger="load, every 15s"
          hx-swap="innerHTML"
-         class="border border-zinc-900 rounded divide-y divide-zinc-900 min-h-[300px]">
-      <div class="p-6 text-zinc-600 text-sm">loading…</div>
+         class="border border-zinc-900 rounded divide-y divide-zinc-900 min-h-[280px]">
+      <div class="p-4 text-zinc-700 text-xs">loading…</div>
     </div>
   </section>
 
 </div>
 </main>
 
-<footer class="border-t border-zinc-900 py-6 mt-12">
-  <div class="max-w-7xl mx-auto px-6 text-[11px] text-zinc-600 mono flex justify-between flex-wrap gap-2">
+<footer class="border-t border-zinc-900 py-4 mt-8">
+  <div class="max-w-6xl mx-auto px-5 text-[10px] text-zinc-700 mono flex justify-between flex-wrap gap-2">
     <span>hl.signals · data from Hyperliquid public API</span>
     <span>not financial advice</span>
   </div>
@@ -165,32 +161,24 @@ if (!in_array($window, ['day', 'week', 'month', 'score'], true)) $window = 'day'
   };
 
   function renderSignals(rows) {
-    if (!rows || !rows.length) return `<div class="border border-dashed border-zinc-800 rounded p-6 text-center text-zinc-600 text-sm">no active consensus signals · check back soon</div>`;
-    return `<div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">` + rows.map(r => {
-      const dirCls = r.direction === 'long' ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' : 'bg-red-500/15 text-red-400 border-red-500/30';
-      const arrow = r.direction === 'long' ? '↑' : '↓';
+    if (!rows || !rows.length) return `<div class="text-zinc-700 text-xs py-2">no active consensus signals</div>`;
+    return `<div class="flex flex-wrap gap-1.5">` + rows.map(r => {
+      const dirCls = r.direction === 'long' ? 'text-emerald-400 border-emerald-500/30' : 'text-red-400 border-red-500/30';
+      const arrow = r.direction === 'long' ? '▲' : '▼';
       const moveCls = r.mark_at_signal && r.avg_entry
         ? (r.direction === 'long'
             ? (r.mark_at_signal > r.avg_entry ? 'up' : 'down')
             : (r.mark_at_signal < r.avg_entry ? 'up' : 'down'))
-        : 'text-zinc-500';
+        : 'text-zinc-600';
       const movePct = r.mark_at_signal && r.avg_entry
         ? ((r.mark_at_signal / r.avg_entry - 1) * 100 * (r.direction === 'long' ? 1 : -1)).toFixed(1) + '%'
-        : '—';
-      return `<a href="/coin.php?c=${r.coin}" class="block bg-zinc-900/40 border border-zinc-800 rounded p-4 hover:border-emerald-500/50 transition">
-        <div class="flex items-center justify-between mb-2">
-          <div class="flex items-center gap-2">
-            <span class="mono text-lg font-bold">${r.coin}</span>
-            <span class="text-[10px] ${dirCls} border px-1.5 py-0.5 rounded font-semibold uppercase">${arrow} ${r.direction}</span>
-          </div>
-          <span class="text-[10px] text-zinc-500">${age(r.created_at)}</span>
-        </div>
-        <div class="text-sm text-zinc-300"><span class="mono font-bold text-emerald-400">${r.consensus_count}/${r.top_n}</span> top traders</div>
-        <div class="mono text-xs text-zinc-500 mt-2 flex justify-between">
-          <span>entry ${fmtPriceInline(r.avg_entry)}</span>
-          <span class="${moveCls}">${movePct}</span>
-        </div>
-        <div class="mono text-xs text-zinc-500 mt-1">notional ${money(r.total_notional)}</div>
+        : '';
+      return `<a href="/coin.php?c=${r.coin}" class="mono text-xs inline-flex items-center gap-2 border ${dirCls} rounded px-2 py-1 hover:bg-white/5">
+        <span class="font-bold">${arrow} ${r.coin}</span>
+        <span class="text-zinc-500">${r.consensus_count}/${r.top_n}</span>
+        <span class="text-zinc-600">·</span>
+        <span class="text-zinc-400">${money(r.total_notional)}</span>
+        ${movePct ? `<span class="${moveCls}">${movePct}</span>` : ''}
       </a>`;
     }).join('') + `</div>`;
   }
@@ -204,25 +192,25 @@ if (!in_array($window, ['day', 'week', 'month', 'score'], true)) $window = 'day'
   function renderTraders(rows) {
     if (!rows || !rows.length) return `<div class="p-6 text-zinc-600 text-sm">no data yet — run the crawler</div>`;
     const head = `
-      <table class="w-full text-sm">
-        <thead class="text-[10px] uppercase tracking-wider text-zinc-600">
+      <table class="w-full text-xs">
+        <thead class="text-[9px] uppercase tracking-wider text-zinc-600">
           <tr>
-            <th class="text-left font-medium px-4 py-3 w-8">#</th>
-            <th class="text-left font-medium px-4 py-3">Trader</th>
-            <th class="text-right font-medium px-4 py-3">PnL</th>
-            <th class="text-right font-medium px-4 py-3">Volume</th>
-            <th class="text-right font-medium px-4 py-3">Equity</th>
+            <th class="text-left font-medium px-3 py-2 w-6">#</th>
+            <th class="text-left font-medium px-3 py-2">Trader</th>
+            <th class="text-right font-medium px-3 py-2">PnL</th>
+            <th class="text-right font-medium px-3 py-2">Vol</th>
+            <th class="text-right font-medium px-3 py-2">Eq</th>
           </tr>
         </thead><tbody class="mono">`;
     const body = rows.map((r, i) => {
       const pnl = Number(r.pnl || 0);
       const cls = pnl >= 0 ? 'up' : 'down';
       return `<tr class="border-t border-zinc-900 cursor-pointer" onclick="location.href='/trader.php?addr=${r.address}'">
-        <td class="px-4 py-3 text-zinc-600">${i+1}</td>
-        <td class="px-4 py-3"><a href="/trader.php?addr=${r.address}" class="text-zinc-200 hover:text-emerald-400">${shortAddr(r.address)}</a>${r.label ? ` <span class="text-[10px] text-zinc-500 ml-1">${r.label}</span>` : ''}</td>
-        <td class="px-4 py-3 text-right ${cls}">${money(pnl)}</td>
-        <td class="px-4 py-3 text-right text-zinc-400">${money(Number(r.volume||0))}</td>
-        <td class="px-4 py-3 text-right text-zinc-400">${money(Number(r.account_value||0))}</td>
+        <td class="px-3 py-1.5 text-zinc-600">${i+1}</td>
+        <td class="px-3 py-1.5"><a href="/trader.php?addr=${r.address}" class="text-zinc-200 hover:text-emerald-400">${shortAddr(r.address)}</a>${r.label ? ` <span class="text-[9px] text-zinc-500 ml-1">${r.label}</span>` : ''}</td>
+        <td class="px-3 py-1.5 text-right ${cls}">${money(pnl)}</td>
+        <td class="px-3 py-1.5 text-right text-zinc-500">${money(Number(r.volume||0))}</td>
+        <td class="px-3 py-1.5 text-right text-zinc-500">${money(Number(r.account_value||0))}</td>
       </tr>`;
     }).join('');
     return head + body + '</tbody></table>';
@@ -234,21 +222,21 @@ if (!in_array($window, ['day', 'week', 'month', 'score'], true)) $window = 'day'
       const sideCls = r.side === 'long'
         ? 'bg-emerald-500/15 text-emerald-400'
         : 'bg-red-500/15 text-red-400';
-      return `<div class="p-4 flex items-center gap-4 hover:bg-white/[.02] cursor-pointer" onclick="location.href='/trader.php?addr=${r.address}'">
-        <div class="mono text-zinc-600 text-xs w-5">${i+1}</div>
+      return `<div class="px-3 py-2 flex items-center gap-3 hover:bg-white/[.02] cursor-pointer" onclick="location.href='/trader.php?addr=${r.address}'">
+        <div class="mono text-zinc-700 text-[10px] w-4">${i+1}</div>
         <div class="flex-1 min-w-0">
-          <div class="flex items-center gap-2">
-            <a href="/coin.php?c=${r.coin}" class="mono font-bold hover:text-emerald-400" onclick="event.stopPropagation()">${r.coin}</a>
-            <span class="text-[10px] ${sideCls} px-1.5 py-0.5 rounded font-semibold uppercase">${r.side}</span>
-            <span class="mono text-[10px] text-zinc-500">${Number(r.leverage).toFixed(1)}×</span>
+          <div class="flex items-center gap-1.5">
+            <a href="/coin.php?c=${r.coin}" class="mono font-bold text-xs hover:text-emerald-400" onclick="event.stopPropagation()">${r.coin}</a>
+            <span class="text-[9px] ${sideCls} px-1 py-0.5 rounded font-semibold uppercase">${r.side}</span>
+            <span class="mono text-[9px] text-zinc-600">${Number(r.leverage).toFixed(0)}×</span>
           </div>
-          <div class="mono text-xs text-zinc-500 mt-0.5">
-            <a href="/trader.php?addr=${r.address}" class="hover:text-emerald-400" onclick="event.stopPropagation()">${shortAddr(r.address)}</a> · ${age(r.updated_at)} ago · entry $${Number(r.entry_px).toLocaleString()} → $${Number(r.mark_px).toLocaleString()}
+          <div class="mono text-[10px] text-zinc-600 mt-0.5 truncate">
+            <a href="/trader.php?addr=${r.address}" class="hover:text-emerald-400" onclick="event.stopPropagation()">${shortAddr(r.address)}</a> · ${age(r.updated_at)} · ${fmtPriceInline(Number(r.entry_px))} → ${fmtPriceInline(Number(r.mark_px))}
           </div>
         </div>
         <div class="text-right">
-          <div class="mono up font-bold">${money(Number(r.unrealized_pnl))}</div>
-          <div class="mono text-xs up">+${Number(r.unrealized_pct).toFixed(1)}%</div>
+          <div class="mono up font-bold text-xs">${money(Number(r.unrealized_pnl))}</div>
+          <div class="mono text-[10px] up">+${Number(r.unrealized_pct).toFixed(1)}%</div>
         </div>
       </div>`;
     }).join('');
