@@ -9,7 +9,7 @@ const TOP_N = 20;
 const CONSENSUS_MIN = 8;       // ≥ this many of top-N on same side → signal
 const SIGNAL_COOLDOWN_HRS = 6; // don't re-emit same (coin, direction) within this window
 
-// 1. top-N traders by composite score (same formula as api.php)
+// 1. top-N traders by 30d PnL
 $top = db()->query("
     SELECT t.address
     FROM portfolios p
@@ -18,8 +18,7 @@ $top = db()->query("
       AND p.vlm_month >= 500000
       AND p.account_value >= 10000
       AND p.pnl_month > 0
-    ORDER BY (p.pnl_month * (1.0 + 3.0 * (p.pnl_month / NULLIF(p.vlm_month, 0)))
-              * CASE WHEN p.pnl_week > 0 THEN 1.2 ELSE 0.8 END) DESC
+    ORDER BY p.pnl_month DESC
     LIMIT " . TOP_N
 )->fetchAll(PDO::FETCH_COLUMN);
 

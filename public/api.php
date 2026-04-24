@@ -11,32 +11,6 @@ $q = $_GET['q'] ?? '';
 switch ($q) {
     case 'traders':
         $window = $_GET['w'] ?? 'day';
-        if ($window === 'score') {
-            // Composite: PnL 30d weighted by efficiency (PnL/Volume) and consistency (PnL 7d sign)
-            // Formula rewards profitable traders with high PnL-per-volume and recent continued edge.
-            $sql = "
-                SELECT t.address, t.label,
-                       p.pnl_month AS pnl,
-                       p.vlm_month AS volume,
-                       p.account_value,
-                       p.pnl_week,
-                       (
-                         p.pnl_month
-                         * (1.0 + 3.0 * (p.pnl_month / NULLIF(p.vlm_month, 0)))
-                         * CASE WHEN p.pnl_week > 0 THEN 1.2 ELSE 0.8 END
-                       ) AS score
-                FROM portfolios p
-                JOIN traders t USING (address)
-                WHERE COALESCE(t.role, 'user') = 'user'
-                  AND p.vlm_month >= 500000
-                  AND p.account_value >= 10000
-                  AND p.pnl_month > 0
-                ORDER BY score DESC
-                LIMIT 20
-            ";
-            echo json_encode(db()->query($sql)->fetchAll());
-            break;
-        }
         $col = match ($window) {
             'week' => 'pnl_week',
             'month' => 'pnl_month',
@@ -111,8 +85,7 @@ switch ($q) {
               AND p.vlm_month >= 500000
               AND p.account_value >= 10000
               AND p.pnl_month > 0
-            ORDER BY (p.pnl_month * (1.0 + 3.0 * (p.pnl_month / NULLIF(p.vlm_month, 0)))
-                      * CASE WHEN p.pnl_week > 0 THEN 1.2 ELSE 0.8 END) DESC
+            ORDER BY p.pnl_month DESC
             LIMIT 20
         ")->fetchAll(PDO::FETCH_COLUMN);
 
@@ -146,8 +119,7 @@ switch ($q) {
               AND p.vlm_month >= 500000
               AND p.account_value >= 10000
               AND p.pnl_month > 0
-            ORDER BY (p.pnl_month * (1.0 + 3.0 * (p.pnl_month / NULLIF(p.vlm_month, 0)))
-                      * CASE WHEN p.pnl_week > 0 THEN 1.2 ELSE 0.8 END) DESC
+            ORDER BY p.pnl_month DESC
             LIMIT 20
         ")->fetchAll(PDO::FETCH_COLUMN);
         if (!$top20) { echo '[]'; break; }

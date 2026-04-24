@@ -5,8 +5,8 @@ require __DIR__ . '/../lib/db.php';
 $view = $_GET['view'] ?? 'traders';
 if (!in_array($view, ['traders', 'signals', 'coins'], true)) $view = 'traders';
 
-$sort = $_GET['sort'] ?? 'score';
-if (!in_array($sort, ['day', 'week', 'month', 'score'], true)) $sort = 'score';
+$sort = $_GET['sort'] ?? 'month';
+if (!in_array($sort, ['day', 'week', 'month'], true)) $sort = 'month';
 
 $filters = [
     'profitable' => isset($_GET['profitable']),
@@ -224,7 +224,7 @@ function toggle_url(string $key): string {
     <div class="sb-section">
       <div class="sb-head">🔽 Sort by</div>
       <div class="chips">
-        <?php foreach (['score' => ['🎯','Score'], 'day' => ['⚡','24h PnL'], 'week' => ['📅','7d PnL'], 'month' => ['📆','30d PnL']] as $k => [$em,$lbl]): ?>
+        <?php foreach (['day' => ['⚡','24h PnL'], 'week' => ['📅','7d PnL'], 'month' => ['📆','30d PnL']] as $k => [$em,$lbl]): ?>
           <a class="chip <?= $sort === $k ? 'active' : '' ?>" href="<?= url_with(['sort' => $k]) ?>"><span class="em"><?= $em ?></span><?= $lbl ?></a>
         <?php endforeach; ?>
       </div>
@@ -256,7 +256,7 @@ function toggle_url(string $key): string {
     <div class="sb-section">
       <div class="sb-head">ℹ️ About</div>
       <div style="font-size: 12px; color: var(--muted); line-height: 1.5;">
-        Tracks active traders on Hyperliquid. Ranks by composite score. Emits signals when ≥8 of top-20 pile into the same coin within 24h.
+        Tracks active traders on Hyperliquid. Emits signals when ≥8 of the top 20 traders by 30d PnL pile into the same coin within 24h.
       </div>
     </div>
   </aside>
@@ -373,7 +373,7 @@ function toggle_url(string $key): string {
   async function loadTraders() {
     const res = await fetch('/api.php?q=traders&w=' + SORT).then(r => r.json());
     const rows = res;
-    const windowLabel = SORT === 'score' ? 'Score' : SORT === 'day' ? '24h' : SORT === 'week' ? '7d' : '30d';
+    const windowLabel = SORT === 'day' ? '24h' : SORT === 'week' ? '7d' : '30d';
 
     // apply front-end filters (we already filter on backend for score; here tweak)
     const filtered = rows.filter(r => {
@@ -404,7 +404,6 @@ function toggle_url(string $key): string {
           <div class="row"><span class="l"><span>💰</span>Equity</span><span class="v num">${moneyRaw(equity)}</span></div>
           <div class="row"><span class="l"><span>📊</span>Volume</span><span class="v num mute">${moneyRaw(vol)}</span></div>
           <div class="row"><span class="l"><span>📈</span>PnL 7d</span><span class="v num ${Number(r.pnl_week||0) >= 0 ? 'up' : 'down'}">${r.pnl_week !== undefined ? money(Number(r.pnl_week)) : '—'}</span></div>
-          ${r.score !== undefined ? `<div class="row"><span class="l"><span>🎯</span>Score</span><span class="v num mute">${Math.round(r.score).toLocaleString()}</span></div>` : ''}
         </div>
       </a>`;
     }).join('') || `<div style="grid-column: 1 / -1; color: var(--muted); padding: 20px; font-size: 13px;">no traders match the current filters</div>`;
